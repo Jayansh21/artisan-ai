@@ -1,26 +1,32 @@
-// frontend/src/components/ArtisanAI.tsx
 import React, { useState } from 'react';
 import { 
-  BarChart3, 
-  Users, 
-  Bot, 
   TrendingUp, 
-  MapPin, 
-  Phone, 
-  Mail, 
+  Brain, 
+  Users, 
+  Settings, 
+  BookOpen,
+  BarChart3,
+  Bot,
+  MapPin,
+  Phone,
+  Mail,
   Star,
   Calendar,
   ArrowRight,
   Target
 } from 'lucide-react';
 
-// Import the new components
+// Import actual components from their respective folders
 import MarketIntelligence from './intelligence/MarketIntelligence';
 import SmartNetworking from './networking/CommunicationTemplates';
 import BusinessAutomation from './automation/BusinessAutomation';
+import {StorytellingDashboard} from './storytelling/StorytellingDashboard';
 
-// Keep the existing MarketAnalyzer component (from your original code)
-const MarketAnalyzer: React.FC = () => {
+// Export TabId type for use in other components
+export type TabId = 'market-expansion' | 'market-intelligence' | 'smart-networking' | 'business-automation' | 'storytelling';
+
+// Main Market Expansion Analyzer Component
+const MarketExpansion: React.FC = () => {
   const [sourceState, setSourceState] = useState('');
   const [targetState, setTargetState] = useState('');
   const [product, setProduct] = useState('');
@@ -145,9 +151,10 @@ const MarketAnalyzer: React.FC = () => {
     setProduct('');
   };
 
+  // Results view
   if (marketData && expansionPlan) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="p-6">
         <div className="max-w-6xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6">
@@ -326,22 +333,21 @@ const MarketAnalyzer: React.FC = () => {
     );
   }
 
+  // Input form view
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
-            ArtisanAI
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Intelligent market expansion platform for Indian artisans and small businesses
+    <div className="p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Market Expansion Analyzer</h2>
+          <p className="text-lg text-gray-600">
+            Discover new markets with AI-powered insights and expansion planning
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6">
-            <h2 className="text-2xl font-bold text-white">Market Expansion Analyzer</h2>
-            <p className="text-blue-100 mt-2">Discover new markets with AI-powered insights</p>
+            <h3 className="text-xl font-bold text-white">Market Analysis Setup</h3>
+            <p className="text-blue-100 mt-1">Configure your market expansion parameters</p>
           </div>
 
           <div className="p-8">
@@ -412,7 +418,7 @@ const MarketAnalyzer: React.FC = () => {
               </div>
 
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">What You'll Get:</h3>
+                <h4 className="text-lg font-semibold text-gray-800 mb-4">What You'll Get:</h4>
                 <ul className="space-y-3">
                   {[
                     'Market size and demand analysis',
@@ -430,7 +436,7 @@ const MarketAnalyzer: React.FC = () => {
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       </div>
-                      <span className="text-gray-700">{feature}</span>
+                      <span className="text-gray-700 text-sm">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -443,98 +449,112 @@ const MarketAnalyzer: React.FC = () => {
   );
 };
 
-// Main ArtisanAI Component with Navigation
+interface Tab {
+  id: TabId;
+  name: string;
+  icon: React.ComponentType<{ className?: string }>;
+  component: React.ComponentType;
+}
+
+const tabs: Tab[] = [
+  {
+    id: 'market-expansion',
+    name: 'Market Expansion',
+    icon: TrendingUp,
+    component: MarketExpansion,
+  },
+  {
+    id: 'market-intelligence',
+    name: 'Market Intelligence',
+    icon: Brain,
+    component: MarketIntelligence,
+  },
+  {
+    id: 'smart-networking',
+    name: 'Smart Networking',
+    icon: Users,
+    component: SmartNetworking,
+  },
+  {
+    id: 'business-automation',
+    name: 'Business Automation',
+    icon: Settings,
+    component: BusinessAutomation,
+  },
+  {
+    id: 'storytelling',
+    name: 'Storytelling',
+    icon: BookOpen,
+    component: StorytellingDashboard,
+  },
+];
+
 const ArtisanAI: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'expansion' | 'intelligence' | 'networking' | 'automation'>('expansion');
+  const [activeTab, setActiveTab] = useState<TabId>('market-expansion');
 
-  const tabs = [
-    {
-      id: 'expansion',
-      name: 'Market Expansion',
-      icon: TrendingUp,
-      description: 'AI-powered market analysis and expansion planning'
-    },
-    {
-      id: 'intelligence',
-      name: 'Market Intelligence',
-      icon: BarChart3,
-      description: 'Real-time market trends and insights'
-    },
-    {
-      id: 'networking',
-      name: 'Smart Networking',
-      icon: Users,
-      description: 'AI contact discovery and relationship management'
-    },
-    {
-      id: 'automation',
-      name: 'Business Automation',
-      icon: Bot,
-      description: 'Streamline operations with intelligent workflows'
-    }
-  ];
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'expansion':
-        return <MarketAnalyzer />;
-      case 'intelligence':
-        return <MarketIntelligence />;
-      case 'networking':
-        return <SmartNetworking />;
-      case 'automation':
-        return <BusinessAutomation />;
-      default:
-        return <MarketAnalyzer />;
-    }
-  };
+  const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || MarketExpansion;
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">AI</span>
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">ArtisanAI</h1>
+                  <p className="text-sm text-gray-500">Intelligent Business Growth Platform</p>
+                </div>
+              </div>
+            </div>
+            
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                ArtisanAI
-              </h1>
-              <span className="text-sm text-gray-500">|</span>
-              <span className="text-sm text-gray-600">Intelligent Business Growth Platform</span>
+              <button className="text-gray-400 hover:text-gray-500">
+                <span className="sr-only">Notifications</span>
+              </button>
+              <div className="h-8 w-8 rounded-full bg-gray-300"></div>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      {/* Navigation */}
+      <nav className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8" aria-label="Tabs">
+          <div className="flex space-x-8">
             {tabs.map((tab) => {
               const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`${
-                    activeTab === tab.id
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200
+                    ${isActive
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } flex items-center space-x-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200`}
+                    }
+                  `}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-5 h-5" />
                   <span>{tab.name}</span>
                 </button>
               );
             })}
-          </nav>
+          </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Tab Content */}
-      <div className="max-w-7xl mx-auto">
-        {renderTabContent()}
-      </div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <ActiveComponent />
+      </main>
     </div>
   );
 };
