@@ -9,9 +9,13 @@
 
 ## 1. Install Dependencies
 Run the following command in the project root to install required dependencies:
-
+for backend terminal
 ```bash
 npm install
+```
+for frontend terminal
+```bash
+npm install --legacy-peer-deps
 ```
 ---
 
@@ -36,5 +40,10 @@ cd frontend
 npm start
 ```
 ---
+## 5. before push
+Open both Terminal 
+```bash 
+Remove-Item -Recurse -Force .\node_modules
+```
 
 
