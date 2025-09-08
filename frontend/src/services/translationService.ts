@@ -5,23 +5,42 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api
 export class TranslationService {
   static async translateStory(request: TranslationRequest): Promise<TranslationResponse> {
     try {
+      // Simple translation call to match your backend controller
       const response = await fetch(`${API_BASE_URL}/storytelling/translate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // Remove auth for now since backend doesn't handle it yet
         },
-        body: JSON.stringify(request)
+        body: JSON.stringify({
+          text: request.text,
+          targetLanguage: request.targetLanguages[0] // For now, translate to first language
+        })
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Translation failed');
+        const error = await response.json().catch(() => ({ error: 'Translation failed' }));
+        throw new Error(error.error || 'Translation failed');
       }
 
       const result = await response.json();
-      return result;
+      
+      // Transform backend response to match frontend expected format
+      return {
+        success: true,
+        translations: [{
+          id: `temp-${Date.now()}`, // Temporary ID
+          storyId: '', // Empty for now, will be set when saving
+          language: result.targetLanguage,
+          languageName: this.getLanguageName(result.targetLanguage),
+          translatedText: result.translatedText,
+          confidence: 0.9, // Default confidence since backend doesn't return it
+          createdAt: new Date() // Current timestamp
+        }],
+        error: undefined
+      };
     } catch (error) {
+      console.error('Translation error:', error);
       return {
         success: false,
         translations: [],
@@ -30,13 +49,31 @@ export class TranslationService {
     }
   }
 
+  // Helper method to get language names
+  private static getLanguageName(code: string): string {
+    const languageNames: Record<string, string> = {
+      en: 'English',
+      es: 'Spanish',
+      fr: 'French',
+      de: 'German',
+      it: 'Italian',
+      pt: 'Portuguese',
+      ru: 'Russian',
+      ja: 'Japanese',
+      ko: 'Korean',
+      zh: 'Chinese',
+      ar: 'Arabic',
+      hi: 'Hindi',
+    };
+    return languageNames[code] || code;
+  }
+
   static async detectLanguage(text: string): Promise<string> {
     try {
       const response = await fetch(`${API_BASE_URL}/storytelling/detect-language`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({ text })
       });
@@ -46,7 +83,7 @@ export class TranslationService {
       }
 
       const result = await response.json();
-      return result.data.language;
+      return result.data?.language || 'en';
     } catch (error) {
       console.error('Language detection error:', error);
       return 'en'; // Default to English
@@ -55,18 +92,14 @@ export class TranslationService {
 
   static async getTranslationQuota(): Promise<{ used: number; limit: number }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/storytelling/translation-quota`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await fetch(`${API_BASE_URL}/storytelling/translation-quota`);
 
       if (!response.ok) {
         throw new Error('Failed to get translation quota');
       }
 
       const result = await response.json();
-      return result.data;
+      return result.data || { used: 0, limit: 1000 };
     } catch (error) {
       console.error('Error getting translation quota:', error);
       return { used: 0, limit: 1000 }; // Default values
@@ -79,7 +112,6 @@ export class TranslationService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({ translations })
       });

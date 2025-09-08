@@ -352,4 +352,4 @@ export const StorytellingDashboard: React.FC = () => {
   );
 };
 
-export {};
+export default StorytellingDashboard;

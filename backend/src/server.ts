@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import { Request, Response } from 'express'; // ADD THIS LINE
 import { connectDB } from './config/database';
 import marketRoutes from './routes/market';
 import contactRoutes from './routes/contacts';
@@ -35,16 +36,11 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Routes
-app.use('/api/market', marketRoutes);
-app.use('/api/contacts', contactRoutes);
-app.use('/api/automation', automationRoutes);
-app.use('/api/storytelling', storytellingRoutes);
-
-// Health check
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
+// ✅ Health check route
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Server is healthy',
     timestamp: new Date().toISOString(),
     services: {
       database: 'connected',
@@ -54,6 +50,52 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Routes
+app.use('/api/market', marketRoutes);
+app.use('/api/contacts', contactRoutes);
+app.use('/api/automation', automationRoutes);
+app.use('/api/storytelling', storytellingRoutes);
+
+// ADD THIS NEW ROUTE - Direct translation endpoint (matches frontend expectation)
+app.post('/api/translate', async (req: Request, res: Response) => {
+  try {
+    const { text, targetLanguage, sourceLanguage = 'auto' } = req.body;
+    
+    if (!text || !targetLanguage) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: text and targetLanguage'
+      });
+    }
+
+    // Import Google Cloud Translation
+    const { Translate } = require('@google-cloud/translate').v2;
+    const translate = new Translate({
+      projectId: process.env.GOOGLE_CLOUD_PROJECT_ID || 'central-rig-415910'
+    });
+
+    // Perform translation
+    const [translation] = await translate.translate(text, targetLanguage);
+    
+    res.json({
+      success: true,
+      originalText: text,
+      translatedText: translation,
+      sourceLanguage: sourceLanguage,
+      targetLanguage: targetLanguage,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Translation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Translation failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // File upload error handling middleware
 app.use(handleUploadErrors);
 
@@ -61,32 +103,18 @@ app.use(handleUploadErrors);
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Global error handler:', err.stack);
   
-  // Handle specific error types
   if (err.name === 'ValidationError') {
-    return res.status(400).json({ 
-      success: false,
-      message: 'Validation Error', 
-      details: err.message 
-    });
+    return res.status(400).json({ success: false, message: 'Validation Error', details: err.message });
   }
   
   if (err.name === 'CastError') {
-    return res.status(400).json({ 
-      success: false,
-      message: 'Invalid ID format', 
-      details: err.message 
-    });
+    return res.status(400).json({ success: false, message: 'Invalid ID format', details: err.message });
   }
   
   if (err.code === 11000) {
-    return res.status(409).json({ 
-      success: false,
-      message: 'Duplicate entry', 
-      details: 'Resource already exists' 
-    });
+    return res.status(409).json({ success: false, message: 'Duplicate entry', details: 'Resource already exists' });
   }
 
-  // Default error response
   res.status(err.status || 500).json({ 
     success: false,
     message: err.message || 'Internal Server Error',
@@ -96,18 +124,15 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 // 404 handler
 app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `Route ${req.originalUrl} not found`
-  });
+  res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
 });
 
 app.listen(PORT, () => {
   console.log(`🚀 ArtisanAI Backend running on port ${PORT}`);
-  console.log(`📊 Health check available at http://localhost:${PORT}/health`);
+  console.log(`📊 Health check available at http://localhost:${PORT}/api/health`);
   console.log(`🎤 Storytelling API available at http://localhost:${PORT}/api/storytelling`);
+  console.log(`🌐 Translation API available at http://localhost:${PORT}/api/translate`);
   
-  // Log configuration status
   if (process.env.GOOGLE_CLOUD_PROJECT_ID) {
     console.log(`☁️ Google Cloud services configured for project: ${process.env.GOOGLE_CLOUD_PROJECT_ID}`);
   } else {

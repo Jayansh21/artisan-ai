@@ -20,6 +20,27 @@ declare global {
 const speechService = new SpeechToTextService();
 const translationService = new TranslationService();
 
+// Add the simple translateText function as required by the step guide
+export const translateText = async (req: Request, res: Response) => {
+  try {
+    const { text, targetLanguage } = req.body;
+    
+    if (!text || !targetLanguage) {
+      return res.status(400).json({ error: 'Text and target language are required' });
+    }
+
+    const translation = await translationService.translateText(text, targetLanguage);
+    
+    res.json({ 
+      originalText: text,
+      translatedText: translation,
+      targetLanguage 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Translation failed' });
+  }
+};
+
 export const storytellingController = {
   // Convert speech to text
   async speechToText(req: Request, res: Response) {

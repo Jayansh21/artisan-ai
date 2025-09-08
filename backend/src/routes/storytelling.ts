@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { storytellingController } from '../controllers/storytellingController';
+import { storytellingController, translateText } from '../controllers/storytellingController';
 import { authMiddleware } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
 import { rateLimiters } from '../middleware/rateLimiter'; // Changed from rateLimiter to rateLimiters
@@ -37,6 +37,12 @@ const translateValidation = [
   body('targetLanguages.*').isString().isLength({ min: 2, max: 5 })
 ];
 
+// Simple translation validation for the new translateText endpoint
+const simpleTranslateValidation = [
+  body('text').notEmpty().isLength({ min: 1, max: 10000 }).withMessage('Text must be between 1 and 10,000 characters'),
+  body('targetLanguage').notEmpty().isString().isLength({ min: 2, max: 5 }).withMessage('Target language is required')
+];
+
 const saveStoryValidation = [
   body('title').notEmpty().isLength({ min: 1, max: 200 }).withMessage('Title must be between 1 and 200 characters'),
   body('originalText').notEmpty().isLength({ min: 10, max: 10000 }).withMessage('Content must be between 10 and 10,000 characters'),
@@ -69,7 +75,15 @@ router.post('/speech-to-text',
   storytellingController.speechToText
 );
 
-// Translation endpoints
+// NEW: Simple translation endpoint for frontend (as per step guide)
+router.post('/translate-text',
+  rateLimiters.translation,
+  simpleTranslateValidation,
+  validateRequest,
+  translateText
+);
+
+// Translation endpoints (existing)
 router.post('/translate',
   rateLimiters.translation, // Changed from rateLimiter to rateLimiters
   translateValidation,
